@@ -339,13 +339,14 @@ endpoints:
     - name: 'azure-foundry'
       # Placeholder value; LibreChat will exchange the user's OpenID token via OBO
       apiKey: 'obo'
-      baseURL: 'https://cevt-open-ai-project-ag-resource.services.ai.azure.com/api/projects/cevt-open-ai-project-agents/applications/${AZURE_FOUNDRY_AGENT_NAME}/protocols/openai/responses'
+      baseURL: 'https://cevt-open-ai-project-ag-resource.services.ai.azure.com/api/projects/cevt-open-ai-project-agents/applications/${AZURE_FOUNDRY_AGENT_NAME}/protocols/openai/responses?api-version=2025-11-15-preview'
       models:
         default: ['gpt-4.1']
         fetch: false
       auth:
         type: azure_obo
         scope: '${AZURE_FOUNDRY_SCOPE}'
+      directEndpoint: true
       addParams:
         extra_body:
           agent:
