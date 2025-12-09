@@ -69,7 +69,7 @@ const initializeClient = async ({ req, res, endpointOption, optionsOnly, overrid
     });
   }
 
-  if (userProvidesKey & !apiKey) {
+  if (userProvidesKey && !apiKey) {
     throw new Error(
       JSON.stringify({
         type: ErrorTypes.NO_USER_KEY,
