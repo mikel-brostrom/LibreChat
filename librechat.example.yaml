@@ -339,13 +339,20 @@ endpoints:
     - name: 'azure-foundry'
       # Placeholder value; LibreChat will exchange the user's OpenID token via OBO
       apiKey: 'obo'
-      baseURL: 'https://open-ai-project-ag-resource.services.ai.azure.com/api/projects/open-ai-project-agents'
+      baseURL: 'https://open-ai-project-ag-resource.services.ai.azure.com'
       models:
         default: ['gpt-4.1']
         fetch: false
       auth:
         type: azure_obo
         scope: '${AZURE_FOUNDRY_SCOPE}'
+      addParams:
+        extra_body:
+          agent:
+            name: '${AZURE_FOUNDRY_AGENT_NAME}'
+            type: 'agent_reference'
+      defaultQuery:
+        'api-version': '2024-10-21'
       # Optional label shown in the UI
       modelDisplayLabel: 'Azure AI Foundry'
 # Example modelSpecs configuration showing grouping options
