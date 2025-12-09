@@ -82,6 +82,12 @@ const initializeClient = async ({ req, res, endpointOption, optionsOnly, overrid
       accessToken: federatedToken,
       scope,
     });
+
+    endpointConfig.headers = {
+      Authorization: `Bearer ${apiKey}`,
+      'api-key': apiKey,
+      ...endpointConfig.headers,
+    };
   }
 
   if (userProvidesKey && !apiKey) {
