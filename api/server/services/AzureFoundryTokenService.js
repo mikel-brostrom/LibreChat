@@ -9,7 +9,7 @@ const getLogStores = require('~/cache/getLogStores');
  * @param {object} params
  * @param {import('@librechat/data-schemas').User} params.user - The authenticated user
  * @param {string} params.accessToken - The OpenID access token to exchange
- * @param {string} params.scope - The Azure AI Foundry scope (e.g. "https://cognitiveservices.azure.com/.default")
+ * @param {string} params.scope - The Azure AI Foundry scope (e.g. "https://ai.azure.com/.default")
  * @returns {Promise<string>} Azure AI Foundry access token
  */
 async function getAzureFoundryToken({ user, accessToken, scope, fromCache = true }) {
