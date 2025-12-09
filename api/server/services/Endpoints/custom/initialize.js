@@ -50,6 +50,21 @@ const initializeClient = async ({ req, res, endpointOption, optionsOnly, overrid
   let apiKey = userProvidesKey ? userValues?.apiKey : CUSTOM_API_KEY;
   let baseURL = userProvidesURL ? userValues?.baseURL : CUSTOM_BASE_URL;
 
+  if (endpointConfig.defaultQuery && baseURL) {
+    try {
+      const url = new URL(baseURL);
+      for (const [key, value] of Object.entries(endpointConfig.defaultQuery)) {
+        if (value !== undefined && !url.searchParams.has(key)) {
+          url.searchParams.set(key, value);
+        }
+      }
+      baseURL = url.toString();
+    } catch (error) {
+      // Non-fatal: fall back to the provided baseURL if it cannot be parsed as a URL
+      console.warn('[custom endpoint] unable to append defaultQuery params to baseURL', error);
+    }
+  }
+
   if (endpointConfig.auth?.type === 'azure_obo') {
     const scope = endpointConfig.auth.scope || process.env.AZURE_FOUNDRY_SCOPE;
 
