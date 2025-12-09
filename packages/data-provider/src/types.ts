@@ -349,6 +349,10 @@ export type TConfig = {
     defaultParamsEndpoint?: string;
     paramDefinitions?: Partial<SettingDefinition>[];
   };
+  auth?: {
+    type: 'azure_obo';
+    scope?: string;
+  };
 };
 
 export type TEndpointsConfig =

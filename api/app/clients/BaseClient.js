@@ -147,7 +147,21 @@ class BaseClient {
   async fetch(_url, init) {
     let url = _url;
     if (this.options.directEndpoint) {
-      url = this.options.reverseProxyUrl;
+      try {
+        const proxyUrl = new URL(this.options.reverseProxyUrl);
+        const requestUrl = new URL(typeof _url === 'string' ? _url : _url.toString());
+
+        for (const [key, value] of requestUrl.searchParams.entries()) {
+          if (!proxyUrl.searchParams.has(key)) {
+            proxyUrl.searchParams.set(key, value);
+          }
+        }
+
+        url = proxyUrl.toString();
+      } catch (error) {
+        logger.warn('[BaseClient] Failed to merge direct endpoint URL params', error);
+        url = this.options.reverseProxyUrl;
+      }
     }
     logger.debug(`Making request to ${url}`);
     if (typeof Bun !== 'undefined') {

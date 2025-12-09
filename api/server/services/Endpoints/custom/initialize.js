@@ -1,4 +1,4 @@
-const { isUserProvided, getOpenAIConfig, getCustomEndpointConfig } = require('@librechat/api');
+const { isUserProvided, getOpenAIConfig, getCustomEndpointConfig, isEnabled } = require('@librechat/api');
 const {
   CacheKeys,
   ErrorTypes,
@@ -10,6 +10,7 @@ const { getUserKeyValues, checkUserKeyExpiry } = require('~/server/services/User
 const { fetchModels } = require('~/server/services/ModelService');
 const OpenAIClient = require('~/app/clients/OpenAIClient');
 const getLogStores = require('~/cache/getLogStores');
+const { getAzureFoundryToken } = require('~/server/services/AzureFoundryTokenService');
 
 const { PROXY } = process.env;
 
@@ -49,7 +50,47 @@ const initializeClient = async ({ req, res, endpointOption, optionsOnly, overrid
   let apiKey = userProvidesKey ? userValues?.apiKey : CUSTOM_API_KEY;
   let baseURL = userProvidesURL ? userValues?.baseURL : CUSTOM_BASE_URL;
 
-  if (userProvidesKey & !apiKey) {
+  if (endpointConfig.defaultQuery && baseURL) {
+    try {
+      const url = new URL(baseURL);
+      for (const [key, value] of Object.entries(endpointConfig.defaultQuery)) {
+        if (value !== undefined && !url.searchParams.has(key)) {
+          url.searchParams.set(key, value);
+        }
+      }
+      baseURL = url.toString();
+    } catch (error) {
+      // Non-fatal: fall back to the provided baseURL if it cannot be parsed as a URL
+      console.warn('[custom endpoint] unable to append defaultQuery params to baseURL', error);
+    }
+  }
+
+  if (endpointConfig.auth?.type === 'azure_obo') {
+    const scope = endpointConfig.auth.scope || process.env.AZURE_FOUNDRY_SCOPE;
+
+    if (!isEnabled(process.env.OPENID_REUSE_TOKENS)) {
+      throw new Error('Azure OBO authentication requires OPENID_REUSE_TOKENS to be enabled');
+    }
+
+    const federatedToken = req.user?.federatedTokens?.access_token;
+    if (!federatedToken) {
+      throw new Error('Missing OpenID access token for Azure on-behalf-of authentication.');
+    }
+
+    apiKey = await getAzureFoundryToken({
+      user: req.user,
+      accessToken: federatedToken,
+      scope,
+    });
+
+    endpointConfig.headers = {
+      ...endpointConfig.headers,
+      Authorization: `Bearer ${apiKey}`,
+      'api-key': endpointConfig.headers?.['api-key'] ?? apiKey,
+    };
+  }
+
+  if (userProvidesKey && !apiKey) {
     throw new Error(
       JSON.stringify({
         type: ErrorTypes.NO_USER_KEY,
@@ -99,6 +140,7 @@ const initializeClient = async ({ req, res, endpointOption, optionsOnly, overrid
     addParams: endpointConfig.addParams,
     dropParams: endpointConfig.dropParams,
     customParams: endpointConfig.customParams,
+    defaultQuery: endpointConfig.defaultQuery,
     titleConvo: endpointConfig.titleConvo,
     titleModel: endpointConfig.titleModel,
     forcePrompt: endpointConfig.forcePrompt,
