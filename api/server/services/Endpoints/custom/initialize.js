@@ -84,8 +84,9 @@ const initializeClient = async ({ req, res, endpointOption, optionsOnly, overrid
     });
 
     endpointConfig.headers = {
-      Authorization: `Bearer ${apiKey}`,
       ...endpointConfig.headers,
+      Authorization: `Bearer ${apiKey}`,
+      'api-key': endpointConfig.headers?.['api-key'] ?? apiKey,
     };
   }
 
