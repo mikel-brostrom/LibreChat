@@ -31,7 +31,21 @@ export function createFetch({
   ): Promise<fetch.Response> {
     let url = _url;
     if (directEndpoint) {
-      url = reverseProxyUrl;
+      try {
+        const proxyUrl = new URL(reverseProxyUrl);
+        const requestUrl = new URL(typeof _url === 'string' ? _url : _url.toString());
+
+        for (const [key, value] of requestUrl.searchParams.entries()) {
+          if (!proxyUrl.searchParams.has(key)) {
+            proxyUrl.searchParams.set(key, value);
+          }
+        }
+
+        url = proxyUrl.toString();
+      } catch (error) {
+        logger.warn('[createFetch] Failed to merge direct endpoint URL params', error);
+        url = reverseProxyUrl;
+      }
     }
     logger.debug(`Making request to ${url}`);
     if (typeof Bun !== 'undefined') {
